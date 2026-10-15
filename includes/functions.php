@@ -2,6 +2,11 @@
 
 require_once dirname(__FILE__) . '/config.php';
 
+// Версия сборки (диагностика: видна в текстах ошибок и в админке)
+if (!defined('APP_BUILD')) {
+    define('APP_BUILD', '2026.10.15.2');
+}
+
 function e($s)
 {
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
@@ -242,8 +247,13 @@ function upload_image($file)
     $allowed = allowed_image_types();
     if ($mime === '' || !in_array($mime, $allowed)) {
         $detail = $mime !== '' ? 'обнаружен: ' . $mime : 'тип не распознан';
+        $ext = strtolower(pathinfo(isset($file['name']) ? $file['name'] : '', PATHINFO_EXTENSION));
+        if ($ext !== '') {
+            $detail .= ', расширение: ' . $ext;
+        }
         throw new Exception(
-            'Недопустимый тип файла (' . $detail . '). Разрешены: ' . implode(', ', $allowed) . '.'
+            'Недопустимый тип файла (' . $detail . '). Допустимо: ' . implode(', ', $allowed)
+            . ' [сборка ' . APP_BUILD . ']'
         );
     }
 

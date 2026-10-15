@@ -26,6 +26,7 @@ $news = $stmt->fetchAll();
             <a href="<?php echo e(url('admin/password.php')); ?>">Сменить пароль</a>
             <a href="<?php echo e(url('index.php')); ?>">На сайт</a>
             <a href="<?php echo e(url('admin/logout.php')); ?>">Выйти</a>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:.75rem;color:var(--muted);">Сборка: <?php echo defined('APP_BUILD') ? e(APP_BUILD) : '—'; ?></div>
         </aside>
         <div>
             <?php if (empty($news)): ?>
