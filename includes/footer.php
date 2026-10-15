@@ -4,7 +4,7 @@
     <div class="container foot-inner">
         <div>
             © <?php echo date('Y'); ?> <?php echo e(APP_NAME); ?><br>
-            <small>Копирование информации только при условии ссылки на сайт</small>
+            <small>Копирование информации только при условии ссылки на сайт<?php echo defined('APP_BUILD') ? ' · сборка ' . e(APP_BUILD) : ' · сборка —'; ?></small>
         </div>
         <div>
             Свердловская обл., г. Нижний Тагил, ул. Металлургов, 1, корпус 7<br>

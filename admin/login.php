@@ -71,6 +71,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                 <strong>Смените пароль сразу после входа</strong> (раздел «Смена пароля» в админке).
             <?php endif; ?>
         </p>
+        <p style="margin-top:6px;color:var(--muted);font-size:.75rem;">
+            Сборка: <?php echo defined('APP_BUILD') ? e(APP_BUILD) : '—'; ?>
+        </p>
     </div>
 </div>
 
