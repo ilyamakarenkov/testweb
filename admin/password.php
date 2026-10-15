@@ -21,19 +21,23 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
             $errors[] = 'Пароли не совпадают.';
         }
         if (empty($errors)) {
-            $pdo = get_db();
-            $stmt = $pdo->prepare('SELECT id, password_hash FROM users WHERE id = :id');
-            $stmt->execute(array(':id' => $_SESSION['user_id']));
-            $user = $stmt->fetch();
-            if (!$user || !verify_password($current, $user['password_hash'])) {
-                $errors[] = 'Текущий пароль указан неверно.';
-            } else {
-                $upd = $pdo->prepare('UPDATE users SET password_hash = :h, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
-                $upd->execute(array(
-                    ':h' => make_password_hash($new1),
-                    ':id' => $user['id'],
-                ));
-                $success = 'Пароль успешно изменён.';
+            try {
+                $pdo = get_db();
+                $stmt = $pdo->prepare('SELECT id, password_hash FROM users WHERE id = :id');
+                $stmt->execute(array(':id' => $_SESSION['user_id']));
+                $user = $stmt->fetch();
+                if (!$user || !verify_password($current, $user['password_hash'])) {
+                    $errors[] = 'Текущий пароль указан неверно.';
+                } else {
+                    $upd = $pdo->prepare('UPDATE users SET password_hash = :h WHERE id = :id');
+                    $upd->execute(array(
+                        ':h' => make_password_hash($new1),
+                        ':id' => $user['id'],
+                    ));
+                    $success = 'Пароль успешно изменён.';
+                }
+            } catch (Exception $ex) {
+                $errors[] = 'Ошибка при сохранении: ' . $ex->getMessage();
             }
         }
     }

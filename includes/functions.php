@@ -101,8 +101,14 @@ function truncate($text, $len = 180)
 function make_password_hash($password)
 {
     if (defined('CRYPT_BLOWFISH') && CRYPT_BLOWFISH == 1) {
-        $salt = '$2y$10$' . substr(str_replace('+', '.', base64_encode(md5(microtime(true), true))), 0, 22);
-        return crypt($password, $salt);
+        // hex-соль гарантированно состоит из допустимых для crypt символов
+        $saltHex = md5(uniqid(mt_rand(), true));
+        foreach (array('$2y$10$', '$2a$10$') as $prefix) {
+            $h = crypt($password, $prefix . substr($saltHex, 0, 22));
+            if (is_string($h) && strlen($h) > 20 && substr($h, 0, 2) === '$2') {
+                return $h;
+            }
+        }
     }
     // Запасной вариант
     return 'sha256:' . hash('sha256', $password . 'profkom_salt');
