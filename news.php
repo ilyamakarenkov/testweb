@@ -34,7 +34,7 @@ $next = $nextStmt->fetch();
 ?>
 
 <article class="article">
-    <div class="meta"><?php echo e(format_date((isset($news['published_at']) && $news['published_at']) ? $news['published_at'] : $news['created_at'])); ?></div>
+    <div class="meta"><span class="pill pill-dark">Новость</span><?php echo e(format_date((isset($news['published_at']) && $news['published_at']) ? $news['published_at'] : $news['created_at'])); ?></div>
     <h1><?php echo e($news['title']); ?></h1>
     <?php if (!empty($news['image'])): ?>
         <div class="cover">

@@ -21,14 +21,15 @@ $stmt->execute();
 $news = $stmt->fetchAll();
 ?>
 
-<section class="hero" style="background-image:linear-gradient(rgba(11,32,54,.78),rgba(11,32,54,.82)),url('<?php echo e(asset('images/hero.jpg')); ?>');">
+<section class="masthead">
     <div class="container">
+        <span class="kicker">ГМПР · ЕВРАЗ НТМК</span>
         <h1>Новости профсоюза</h1>
-        <p>Актуальные события, мероприятия и решения первичной профсоюзной организации ОАО «ЕВРАЗ НТМК» — Горно-металлургического профсоюза России.</p>
+        <p>События, мероприятия и решения первичной профсоюзной организации ОАО «ЕВРАЗ НТМК» — в одном месте.</p>
     </div>
 </section>
 
-<div style="margin-top:24px;">
+<div style="margin-top:30px;">
     <?php if (empty($news)): ?>
         <div class="empty">
             <h3>Новостей пока нет</h3>
@@ -38,30 +39,57 @@ $news = $stmt->fetchAll();
             <?php endif; ?>
         </div>
     <?php else: ?>
-        <div class="news-grid">
-            <?php foreach ($news as $n): ?>
-                <article class="news-card">
-                    <a class="thumb" href="<?php echo e(url('news.php?id=' . (int) $n['id'])); ?>">
-                        <?php if (!empty($n['image'])): ?>
-                            <img src="<?php echo e(asset($n['image'])); ?>" alt="<?php echo e($n['title']); ?>" loading="lazy">
-                        <?php else: ?>
-                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#dbe3ec,#c3cdd9);color:#52606d;font-weight:700;font-size:1.2rem;">НТМК</div>
-                        <?php endif; ?>
-                    </a>
-                    <div class="body">
-                        <div class="meta"><?php echo e(format_date(isset($n['published_at']) && $n['published_at'] ? $n['published_at'] : $n['created_at'])); ?></div>
-                        <h3><a href="<?php echo e(url('news.php?id=' . (int) $n['id'])); ?>"><?php echo e($n['title']); ?></a></h3>
-                        <div class="excerpt"><?php echo e(truncate(isset($n['excerpt']) && $n['excerpt'] ? $n['excerpt'] : $n['content'], 160)); ?></div>
-                        <a class="readmore" href="<?php echo e(url('news.php?id=' . (int) $n['id'])); ?>">Читать далее →</a>
-                    </div>
-                </article>
-            <?php endforeach; ?>
+        <?php
+        $featured = $news[0];
+        $rest = array_slice($news, 1);
+        $featuredDate = (isset($featured['published_at']) && $featured['published_at']) ? $featured['published_at'] : $featured['created_at'];
+        ?>
+        <div class="feed-grid">
+            <article class="featured">
+                <a class="featured-media" href="<?php echo e(url('news.php?id=' . (int) $featured['id'])); ?>">
+                    <?php if (!empty($featured['image'])): ?>
+                        <img src="<?php echo e(asset($featured['image'])); ?>" alt="<?php echo e($featured['title']); ?>">
+                    <?php else: ?>
+                        <div class="thumb-ph">НТМК</div>
+                    <?php endif; ?>
+                </a>
+                <div class="featured-body">
+                    <div class="meta"><span class="pill">Главное</span><?php echo e(format_date($featuredDate)); ?></div>
+                    <h2><a href="<?php echo e(url('news.php?id=' . (int) $featured['id'])); ?>"><?php echo e($featured['title']); ?></a></h2>
+                    <div class="excerpt"><?php echo e(truncate(isset($featured['excerpt']) && $featured['excerpt'] ? $featured['excerpt'] : $featured['content'], 240)); ?></div>
+                    <a class="readmore" href="<?php echo e(url('news.php?id=' . (int) $featured['id'])); ?>">Читать далее →</a>
+                </div>
+            </article>
+
+            <aside class="feed-side">
+                <div class="side-title">Также читают</div>
+                <?php if (empty($rest)): ?>
+                    <p style="color:var(--muted);font-size:.92rem;">Это пока единственная публикация.</p>
+                <?php else: ?>
+                    <?php foreach ($rest as $n): ?>
+                        <?php $d = (isset($n['published_at']) && $n['published_at']) ? $n['published_at'] : $n['created_at']; ?>
+                        <a class="story" href="<?php echo e(url('news.php?id=' . (int) $n['id'])); ?>">
+                            <div class="story-thumb">
+                                <?php if (!empty($n['image'])): ?>
+                                    <img src="<?php echo e(asset($n['image'])); ?>" alt="" loading="lazy">
+                                <?php else: ?>
+                                    <div class="thumb-ph">НТМК</div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="story-info">
+                                <span class="story-title"><?php echo e($n['title']); ?></span>
+                                <span class="meta" style="display:block;margin-top:5px;"><?php echo e(format_date($d)); ?></span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </aside>
         </div>
 
         <?php if ($totalPages > 1): ?>
             <div class="pagination">
                 <?php if ($page > 1): ?>
-                    <a href="<?php echo e(url('index.php?page=' . ($page - 1))); ?>">← Предыдущая</a>
+                    <a href="<?php echo e(url('index.php?page=' . ($page - 1))); ?>">← Назад</a>
                 <?php endif; ?>
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <?php if ($i === $page): ?>
@@ -71,7 +99,7 @@ $news = $stmt->fetchAll();
                     <?php endif; ?>
                 <?php endfor; ?>
                 <?php if ($page < $totalPages): ?>
-                    <a href="<?php echo e(url('index.php?page=' . ($page + 1))); ?>">Следующая →</a>
+                    <a href="<?php echo e(url('index.php?page=' . ($page + 1))); ?>">Вперёд →</a>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
