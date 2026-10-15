@@ -604,6 +604,9 @@ function import_store_image_bytes($bytes)
         }
         @unlink($tmp);
     }
+    // tempnam() создаёт файл с правами 0600, и rename() сохраняет их —
+    // веб-сервер не сможет отдать такую картинку. Выставляем 0644.
+    @chmod($dest, 0644);
     return UPLOAD_URL . '/' . $name;
 }
 

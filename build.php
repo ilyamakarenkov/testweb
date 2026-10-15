@@ -12,7 +12,7 @@ $configPath = dirname(__FILE__) . '/includes/config.php';
 
 echo "=== Диагностика profkom ===\n";
 echo "PHP: " . PHP_VERSION . "\n";
-echo "Дата сборки (ожидается): 2026.10.16.2\n\n";
+echo "Дата сборки (ожидается): 2026.10.16.3\n\n";
 
 echo "includes/functions.php:\n";
 echo "  mtime:  " . date('Y-m-d H:i:s', filemtime($functionsPath)) . "\n";
