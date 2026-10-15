@@ -21,26 +21,23 @@ $stmt->execute();
 $news = $stmt->fetchAll();
 
 /**
- * Разметка одной строки ленты.
+ * Разметка одной строки ленты:
+ * заголовок → дата → картинка (фикс. размер, текст обтекает) → анонс → читать далее.
  */
 function render_feed_item($n)
 {
     $d = (isset($n['published_at']) && $n['published_at']) ? $n['published_at'] : $n['created_at'];
     $href = e(url('news.php?id=' . (int) $n['id']));
     $html = '<article class="feed-item">';
-    $html .= '<a class="feed-item-media" href="' . $href . '">';
-    if (!empty($n['image'])) {
-        $html .= '<img src="' . e(asset($n['image'])) . '" alt="' . e($n['title']) . '" loading="lazy">';
-    } else {
-        $html .= '<div class="thumb-ph">НТМК</div>';
-    }
-    $html .= '</a>';
-    $html .= '<div class="feed-item-body">';
+    $html .= '<h2 class="feed-item-title"><a href="' . $href . '">' . e($n['title']) . '</a></h2>';
     $html .= '<div class="meta">' . e(format_date($d)) . '</div>';
-    $html .= '<h2><a href="' . $href . '">' . e($n['title']) . '</a></h2>';
-    $html .= '<p>' . e(truncate(isset($n['excerpt']) && $n['excerpt'] ? $n['excerpt'] : $n['content'], 220)) . '</p>';
-    $html .= '<a class="readmore" href="' . $href . '">Читать далее →</a>';
-    $html .= '</div></article>';
+    if (!empty($n['image'])) {
+        $html .= '<a class="feed-item-media" href="' . $href . '" tabindex="-1" aria-hidden="true">'
+            . '<img src="' . e(asset($n['image'])) . '" alt="" loading="lazy"></a>';
+    }
+    $html .= '<p class="feed-item-excerpt">' . e(truncate(isset($n['excerpt']) && $n['excerpt'] ? $n['excerpt'] : $n['content'], 260)) . '</p>';
+    $html .= '<div class="feed-item-foot"><a class="readmore" href="' . $href . '">Читать далее →</a></div>';
+    $html .= '</article>';
     return $html;
 }
 
@@ -66,15 +63,13 @@ $pageTitle = 'Новости';
 require_once dirname(__FILE__) . '/includes/header.php';
 ?>
 
-<section class="masthead">
-    <div class="container">
+<div class="feed-list-wrap">
+    <section class="masthead sheet-masthead">
         <span class="kicker">ГМПР · ЕВРАЗ НТМК</span>
         <h1>Новости профсоюза</h1>
         <p>События, мероприятия и решения первичной профсоюзной организации ОАО «ЕВРАЗ НТМК» — в одном месте.</p>
-    </div>
-</section>
+    </section>
 
-<div class="feed-list-wrap">
     <div class="feed-list" id="feed-list">
         <?php if (empty($news)): ?>
             <div class="empty">

@@ -57,15 +57,91 @@ $next = $nextStmt->fetch();
     if (!empty($gallery)):
     ?>
         <section class="gallery">
-            <h2 class="gallery-title">Фотогалерея</h2>
-            <div class="gallery-grid">
-                <?php foreach ($gallery as $g): ?>
-                    <a class="gallery-item" href="<?php echo e(asset($g['image'])); ?>" target="_blank" rel="noopener">
-                        <img src="<?php echo e(asset($g['image'])); ?>" alt="Фото к новости" loading="lazy">
-                    </a>
+            <h2 class="gallery-title">Фотогалерея <span class="gallery-count"><?php echo count($gallery); ?> фото</span></h2>
+            <div class="gallery-grid" id="gallery-grid">
+                <?php foreach ($gallery as $gi => $g): ?>
+                    <button type="button" class="gallery-item" data-index="<?php echo (int) $gi; ?>">
+                        <img src="<?php echo e(asset($g['image'])); ?>" alt="Фото <?php echo (int) $gi + 1; ?>" loading="lazy">
+                    </button>
                 <?php endforeach; ?>
             </div>
         </section>
+
+        <!-- Лайтбокс-листалка -->
+        <div class="lb" id="gallery-lb" style="display:none;" aria-modal="true" role="dialog">
+            <button type="button" class="lb-close" id="lb-close" aria-label="Закрыть">×</button>
+            <button type="button" class="lb-arrow lb-prev" id="lb-prev" aria-label="Предыдущее фото">‹</button>
+            <div class="lb-stage">
+                <img id="lb-img" src="" alt="">
+                <div class="lb-counter" id="lb-counter"></div>
+            </div>
+            <button type="button" class="lb-arrow lb-next" id="lb-next" aria-label="Следующее фото">›</button>
+            <div class="lb-thumbs" id="lb-thumbs"></div>
+        </div>
+        <script>
+        (function () {
+            var urls = [];
+            <?php foreach ($gallery as $g): ?>
+            urls.push('<?php echo e(addslashes(asset($g['image']))); ?>');
+            <?php endforeach; ?>
+            var grid = document.getElementById('gallery-grid');
+            var lb = document.getElementById('gallery-lb');
+            var img = document.getElementById('lb-img');
+            var counter = document.getElementById('lb-counter');
+            var thumbsEl = document.getElementById('lb-thumbs');
+            var cur = 0;
+
+            if (!grid || !lb) return;
+
+            // Миниатюры в лайтбоксе
+            for (var i = 0; i < urls.length; i++) {
+                var t = document.createElement('button');
+                t.type = 'button';
+                t.className = 'lb-thumb';
+                t.setAttribute('data-i', i);
+                var ti = document.createElement('img');
+                ti.src = urls[i];
+                ti.alt = '';
+                t.appendChild(ti);
+                t.addEventListener('click', function () { show(parseInt(this.getAttribute('data-i'), 10)); });
+                thumbsEl.appendChild(t);
+            }
+
+            function show(i) {
+                if (i < 0) i = urls.length - 1;
+                if (i >= urls.length) i = 0;
+                cur = i;
+                img.src = urls[cur];
+                counter.textContent = (cur + 1) + ' / ' + urls.length;
+                var th = thumbsEl.children;
+                for (var k = 0; k < th.length; k++) {
+                    th[k].className = 'lb-thumb' + (k === cur ? ' active' : '');
+                }
+                lb.style.display = 'flex';
+            }
+
+            var buttons = grid.querySelectorAll('.gallery-item');
+            for (var b = 0; b < buttons.length; b++) {
+                buttons[b].addEventListener('click', function () {
+                    show(parseInt(this.getAttribute('data-index'), 10));
+                });
+            }
+
+            function close() { lb.style.display = 'none'; }
+            document.getElementById('lb-close').addEventListener('click', close);
+            document.getElementById('lb-prev').addEventListener('click', function () { show(cur - 1); });
+            document.getElementById('lb-next').addEventListener('click', function () { show(cur + 1); });
+            lb.addEventListener('click', function (e) {
+                if (e.target === lb) close();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (lb.style.display === 'none') return;
+                if (e.key === 'Escape') close();
+                if (e.key === 'ArrowLeft') show(cur - 1);
+                if (e.key === 'ArrowRight') show(cur + 1);
+            });
+        })();
+        </script>
     <?php endif; ?>
 </article>
 
