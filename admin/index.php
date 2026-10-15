@@ -23,6 +23,7 @@ $news = $stmt->fetchAll();
         <aside class="admin-sidebar">
             <a href="<?php echo e(url('admin/index.php')); ?>" class="active">Все новости</a>
             <a href="<?php echo e(url('admin/create.php')); ?>">+ Добавить новость</a>
+            <a href="<?php echo e(url('admin/import.php')); ?>">Импорт</a>
             <a href="<?php echo e(url('admin/pages.php')); ?>">Страницы</a>
             <a href="<?php echo e(url('admin/password.php')); ?>">Сменить пароль</a>
             <a href="<?php echo e(url('index.php')); ?>">На сайт</a>
@@ -30,6 +31,13 @@ $news = $stmt->fetchAll();
             <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:.75rem;color:var(--muted);">Сборка: <?php echo defined('APP_BUILD') ? e(APP_BUILD) : '—'; ?></div>
         </aside>
         <div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:center;">
+                <form method="post" action="<?php echo e(url('admin/import.php')); ?>" style="display:inline;" onsubmit="return confirm('Запустить импорт последних новостей? Первый запуск удалит демо-новости и загрузит последние 20 статей; далее — только новые.');">
+                    <?php echo csrf_field(); ?>
+                    <button class="btn btn-primary" type="submit">Импорт последних новостей</button>
+                </form>
+                <a class="btn btn-ghost" href="<?php echo e(url('admin/import.php')); ?>">Статус импорта</a>
+            </div>
             <?php if (empty($news)): ?>
                 <div class="empty">
                     <h3>Новостей пока нет</h3>
