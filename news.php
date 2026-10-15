@@ -118,6 +118,7 @@ $next = $nextStmt->fetch();
                     th[k].className = 'lb-thumb' + (k === cur ? ' active' : '');
                 }
                 lb.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; /* фон не скроллится */
             }
 
             var buttons = grid.querySelectorAll('.gallery-item');
@@ -127,7 +128,10 @@ $next = $nextStmt->fetch();
                 });
             }
 
-            function close() { lb.style.display = 'none'; }
+            function close() {
+                lb.style.display = 'none';
+                document.body.style.overflow = '';
+            }
             document.getElementById('lb-close').addEventListener('click', close);
             document.getElementById('lb-prev').addEventListener('click', function () { show(cur - 1); });
             document.getElementById('lb-next').addEventListener('click', function () { show(cur + 1); });
@@ -140,6 +144,29 @@ $next = $nextStmt->fetch();
                 if (e.key === 'ArrowLeft') show(cur - 1);
                 if (e.key === 'ArrowRight') show(cur + 1);
             });
+
+            /* Мобильное: свайп влево/вправо — листание, тап по фото — закрыть */
+            var tx = 0, ty = 0, moved = false;
+            lb.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 1) return;
+                tx = e.touches[0].clientX;
+                ty = e.touches[0].clientY;
+                moved = false;
+            }, true);
+            lb.addEventListener('touchmove', function (e) {
+                if (e.touches.length !== 1) return;
+                if (Math.abs(e.touches[0].clientX - tx) > 10) moved = true;
+            }, true);
+            lb.addEventListener('touchend', function (e) {
+                if (!e.changedTouches.length) return;
+                var dx = e.changedTouches[0].clientX - tx;
+                var dy = e.changedTouches[0].clientY - ty;
+                if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                    show(dx < 0 ? cur + 1 : cur - 1); /* свайп влево — следующая */
+                } else if (!moved && e.target === img) {
+                    close(); /* тап по фото — закрыть */
+                }
+            }, true);
         })();
         </script>
     <?php endif; ?>
