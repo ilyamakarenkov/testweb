@@ -4,7 +4,7 @@ require_once dirname(__FILE__) . '/config.php';
 
 // Версия сборки (диагностика: видна в текстах ошибок и в админке)
 if (!defined('APP_BUILD')) {
-    define('APP_BUILD', '2026.10.15.2');
+    define('APP_BUILD', '2026.10.16.1');
 }
 
 function e($s)

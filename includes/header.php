@@ -26,7 +26,7 @@ if (is_logged_in()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?php echo e(APP_NAME); ?> — новости и информация">
     <title><?php echo e(isset($pageTitle) ? $pageTitle : APP_SHORT); ?> — <?php echo e(APP_SHORT); ?></title>
-    <link rel="stylesheet" href="<?php echo e(asset('assets/css/style.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/style.css')); ?>?v=<?php echo e(APP_BUILD); ?>">
 </head>
 <body>
 <header class="site-header">
