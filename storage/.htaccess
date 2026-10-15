@@ -1,0 +1,5 @@
+# Запретить прямой доступ к БД и служебным файлам
+<FilesMatch "\.(sqlite|sqlite3|db)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes
