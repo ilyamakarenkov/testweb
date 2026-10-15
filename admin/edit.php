@@ -1,40 +1,39 @@
 <?php
-declare(strict_types=1);
 
-require_once __DIR__ . '/../includes/auth.php';
+require_once dirname(__FILE__) . '/../includes/auth.php';
 require_login();
 
-$id = (int) ($_GET['id'] ?? 0);
+$id = (int) (isset($_GET['id']) ? $_GET['id'] : 0);
 if ($id <= 0) {
     redirect(url('admin/index.php'));
 }
 
 $pdo = get_db();
 $stmt = $pdo->prepare("SELECT * FROM news WHERE id = :id");
-$stmt->execute([':id' => $id]);
+$stmt->execute(array(':id' => $id));
 $news = $stmt->fetch();
 if (!$news) {
     flash('error', 'Новость не найдена.');
     redirect(url('admin/index.php'));
 }
 
-$errors = [];
-$values = [
-    'title' => $news['title'],
-    'excerpt' => $news['excerpt'] ?? '',
-    'content' => $news['content'],
-    'published_at' => $news['published_at'] ? date('Y-m-d\TH:i', strtotime($news['published_at'])) : date('Y-m-d\TH:i'),
-    'is_published' => $news['is_published'] ? '1' : '0',
-];
+$errors = array();
+$values = array(
+    'title' => isset($news['title']) ? $news['title'] : '',
+    'excerpt' => isset($news['excerpt']) ? $news['excerpt'] : '',
+    'content' => isset($news['content']) ? $news['content'] : '',
+    'published_at' => (isset($news['published_at']) && $news['published_at']) ? date('Y-m-d\TH:i', strtotime($news['published_at'])) : date('Y-m-d\TH:i'),
+    'is_published' => !empty($news['is_published']) ? '1' : '0',
+);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf()) {
         $errors[] = 'Неверный токен безопасности.';
     } else {
-        $values['title'] = trim((string) ($_POST['title'] ?? ''));
-        $values['excerpt'] = trim((string) ($_POST['excerpt'] ?? ''));
-        $values['content'] = trim((string) ($_POST['content'] ?? ''));
-        $values['published_at'] = trim((string) ($_POST['published_at'] ?? ''));
+        $values['title'] = trim((string) (isset($_POST['title']) ? $_POST['title'] : ''));
+        $values['excerpt'] = trim((string) (isset($_POST['excerpt']) ? $_POST['excerpt'] : ''));
+        $values['content'] = trim((string) (isset($_POST['content']) ? $_POST['content'] : ''));
+        $values['published_at'] = trim((string) (isset($_POST['published_at']) ? $_POST['published_at'] : ''));
         $values['is_published'] = isset($_POST['is_published']) ? '1' : '0';
         $removeImage = isset($_POST['remove_image']);
 
@@ -45,24 +44,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Укажите текст новости.';
         }
 
-        $imagePath = $news['image'];
+        $imagePath = isset($news['image']) ? $news['image'] : null;
         if ($removeImage) {
-            delete_uploaded_image($news['image']);
+            delete_uploaded_image(isset($news['image']) ? $news['image'] : null);
             $imagePath = null;
         }
-        if (empty($errors) && !empty($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+        if (empty($errors) && isset($_FILES['image']) && (isset($_FILES['image']['error']) ? $_FILES['image']['error'] : UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
             try {
                 $newPath = upload_image($_FILES['image']);
-                delete_uploaded_image($news['image']);
+                delete_uploaded_image(isset($news['image']) ? $news['image'] : null);
                 $imagePath = $newPath;
-            } catch (Throwable $e) {
+            } catch (Exception $e) {
                 $errors[] = $e->getMessage();
             }
         }
 
         if (empty($errors)) {
             $stmt = $pdo->prepare("UPDATE news SET title=:title, slug=:slug, excerpt=:excerpt, content=:content, image=:image, is_published=:pub, published_at=:date, updated_at=CURRENT_TIMESTAMP WHERE id=:id");
-            $stmt->execute([
+            $stmt->execute(array(
                 ':title' => $values['title'],
                 ':slug' => slugify($values['title']),
                 ':excerpt' => $values['excerpt'] !== '' ? $values['excerpt'] : null,
@@ -71,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':pub' => (int) $values['is_published'],
                 ':date' => $values['published_at'] !== '' ? str_replace('T', ' ', $values['published_at']) : date('Y-m-d H:i:s'),
                 ':id' => $id,
-            ]);
+            ));
             flash('success', 'Новость обновлена.');
             redirect(url('admin/index.php'));
         }
@@ -79,13 +78,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Редактировать новость';
-require_once __DIR__ . '/../includes/header.php';
+require_once dirname(__FILE__) . '/../includes/header.php';
 ?>
 
 <section class="hero">
     <div class="container">
         <h1>Редактировать новость</h1>
-        <p><?php echo e($news['title']); ?></p>
+        <p><?php echo e(isset($news['title']) ? $news['title'] : ''); ?></p>
     </div>
 </section>
 
@@ -134,4 +133,4 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once dirname(__FILE__) . '/../includes/footer.php'; ?>

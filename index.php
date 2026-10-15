@@ -1,17 +1,17 @@
 <?php
-declare(strict_types=1);
 
 $pageTitle = 'Новости';
-require_once __DIR__ . '/includes/header.php';
+require_once dirname(__FILE__) . '/includes/header.php';
 
 $pdo = get_db();
 
-$page = max(1, (int) ($_GET['page'] ?? 1));
+$page = max(1, (int) (isset($_GET['page']) ? $_GET['page'] : 1));
 $perPage = NEWS_PER_PAGE;
 $offset = ($page - 1) * $perPage;
 
 $totalStmt = $pdo->query("SELECT COUNT(*) AS c FROM news WHERE is_published = 1");
-$total = (int) $totalStmt->fetch()['c'];
+$totalRow = $totalStmt->fetch();
+$total = isset($totalRow['c']) ? (int) $totalRow['c'] : 0;
 $totalPages = max(1, (int) ceil($total / $perPage));
 
 $stmt = $pdo->prepare("SELECT * FROM news WHERE is_published = 1 ORDER BY COALESCE(published_at, created_at) DESC, id DESC LIMIT :l OFFSET :o");
@@ -49,9 +49,9 @@ $news = $stmt->fetchAll();
                         <?php endif; ?>
                     </a>
                     <div class="body">
-                        <div class="meta"><?php echo e(format_date($n['published_at'] ?: $n['created_at'])); ?></div>
+                        <div class="meta"><?php echo e(format_date(isset($n['published_at']) && $n['published_at'] ? $n['published_at'] : $n['created_at'])); ?></div>
                         <h3><a href="<?php echo e(url('news.php?id=' . (int) $n['id'])); ?>"><?php echo e($n['title']); ?></a></h3>
-                        <div class="excerpt"><?php echo e(truncate($n['excerpt'] ?: $n['content'], 160)); ?></div>
+                        <div class="excerpt"><?php echo e(truncate(isset($n['excerpt']) && $n['excerpt'] ? $n['excerpt'] : $n['content'], 160)); ?></div>
                         <a class="readmore" href="<?php echo e(url('news.php?id=' . (int) $n['id'])); ?>">Читать далее →</a>
                     </div>
                 </article>
@@ -78,4 +78,4 @@ $news = $stmt->fetchAll();
     <?php endif; ?>
 </div>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once dirname(__FILE__) . '/includes/footer.php'; ?>

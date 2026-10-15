@@ -1,23 +1,22 @@
 <?php
-declare(strict_types=1);
 
-require_once __DIR__ . '/config.php';
+require_once dirname(__FILE__) . '/config.php';
 
-function e(?string $s): string
+function e($s)
 {
-    return htmlspecialchars((string) $s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 }
 
-function redirect(string $url): void
+function redirect($url)
 {
     header('Location: ' . $url);
     exit;
 }
 
-function flash(string $key, ?string $value = null): ?string
+function flash($key, $value = null)
 {
     if ($value === null) {
-        $v = $_SESSION['flash'][$key] ?? null;
+        $v = isset($_SESSION['flash'][$key]) ? $_SESSION['flash'][$key] : null;
         unset($_SESSION['flash'][$key]);
         return $v;
     }
@@ -25,37 +24,53 @@ function flash(string $key, ?string $value = null): ?string
     return null;
 }
 
-function csrf_token(): string
+function csrf_token()
 {
     if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $_SESSION['csrf_token'] = md5(uniqid(mt_rand(), true));
     }
     return $_SESSION['csrf_token'];
 }
 
-function csrf_field(): string
+function csrf_field()
 {
     return '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
 }
 
-function verify_csrf(): bool
+function verify_csrf()
 {
-    $token = $_POST['csrf_token'] ?? '';
-    return is_string($token) && hash_equals($_SESSION['csrf_token'] ?? '', $token);
+    $token = isset($_POST['csrf_token']) ? $_POST['csrf_token'] : '';
+    return is_string($token) && hash_equals_safe($_SESSION['csrf_token'], $token);
 }
 
-function slugify(string $text): string
+function hash_equals_safe($a, $b)
+{
+    // Полифилл hash_equals для PHP < 5.6
+    if (function_exists('hash_equals')) {
+        return hash_equals($a, $b);
+    }
+    if (strlen($a) !== strlen($b)) {
+        return false;
+    }
+    $result = 0;
+    for ($i = 0; $i < strlen($a); $i++) {
+        $result |= ord($a[$i]) ^ ord($b[$i]);
+    }
+    return $result === 0;
+}
+
+function slugify($text)
 {
     $text = mb_strtolower(trim($text), 'UTF-8');
     $text = preg_replace('/[^\p{L}\p{N}]+/u', '-', $text);
-    $text = trim((string) $text, '-');
+    $text = trim($text, '-');
     if ($text === '') {
         $text = 'news-' . time();
     }
     return $text;
 }
 
-function format_date(?string $dt): string
+function format_date($dt)
 {
     if (!$dt) {
         return '';
@@ -64,16 +79,17 @@ function format_date(?string $dt): string
     if ($ts === false) {
         return $dt;
     }
-    $months = [
+    $months = array(
         1 => 'января', 2 => 'февраля', 3 => 'марта', 4 => 'апреля',
         5 => 'мая', 6 => 'июня', 7 => 'июля', 8 => 'августа',
         9 => 'сентября', 10 => 'октября', 11 => 'ноября', 12 => 'декабря',
-    ];
+    );
     $m = (int) date('n', $ts);
-    return date('j', $ts) . ' ' . ($months[$m] ?? date('F', $ts)) . ' ' . date('Y', $ts);
+    $monthName = isset($months[$m]) ? $months[$m] : date('F', $ts);
+    return date('j', $ts) . ' ' . $monthName . ' ' . date('Y', $ts);
 }
 
-function truncate(string $text, int $len = 180): string
+function truncate($text, $len = 180)
 {
     $text = strip_tags($text);
     if (mb_strlen($text, 'UTF-8') <= $len) {
@@ -82,21 +98,40 @@ function truncate(string $text, int $len = 180): string
     return mb_substr($text, 0, $len, 'UTF-8') . '…';
 }
 
-function upload_image(array $file): ?string
+function make_password_hash($password)
 {
-    if (empty($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+    if (defined('CRYPT_BLOWFISH') && CRYPT_BLOWFISH == 1) {
+        $salt = '$2y$10$' . substr(str_replace('+', '.', base64_encode(md5(microtime(true), true))), 0, 22);
+        return crypt($password, $salt);
+    }
+    // Запасной вариант
+    return 'sha256:' . hash('sha256', $password . 'profkom_salt');
+}
+
+function verify_password($password, $hash)
+{
+    if (strpos($hash, 'sha256:') === 0) {
+        return hash_equals_safe(substr($hash, 7), hash('sha256', $password . 'profkom_salt'));
+    }
+    // Blowfish / crypt
+    return crypt($password, $hash) === $hash;
+}
+
+function upload_image($file)
+{
+    if (empty($file) || (isset($file['error']) && $file['error'] === UPLOAD_ERR_NO_FILE)) {
         return null;
     }
-    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-        throw new RuntimeException('Ошибка загрузки файла.');
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('Ошибка загрузки файла.');
     }
-    if (($file['size'] ?? 0) > MAX_UPLOAD_SIZE) {
-        throw new RuntimeException('Файл слишком большой (макс. 5 МБ).');
+    if (!isset($file['size']) || $file['size'] > MAX_UPLOAD_SIZE) {
+        throw new Exception('Файл слишком большой (макс. 5 МБ).');
     }
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = $finfo->file($file['tmp_name']);
-    if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
-        throw new RuntimeException('Недопустимый тип файла. Разрешены JPG, PNG, GIF, WebP.');
+    if (!in_array($mime, ALLOWED_IMAGE_TYPES)) {
+        throw new Exception('Недопустимый тип файла. Разрешены JPG, PNG, GIF, WebP.');
     }
     if (!is_dir(UPLOAD_DIR)) {
         mkdir(UPLOAD_DIR, 0775, true);
@@ -111,17 +146,17 @@ function upload_image(array $file): ?string
     $name = uniqid('img_', true) . '.' . $ext;
     $dest = UPLOAD_DIR . '/' . $name;
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
-        throw new RuntimeException('Не удалось сохранить файл.');
+        throw new Exception('Не удалось сохранить файл.');
     }
     return UPLOAD_URL . '/' . $name;
 }
 
-function delete_uploaded_image(?string $path): void
+function delete_uploaded_image($path)
 {
     if (!$path) {
         return;
     }
-    $full = __DIR__ . '/../' . ltrim($path, '/');
+    $full = dirname(__FILE__) . '/../' . ltrim($path, '/');
     $realFull = realpath($full);
     $realDir = realpath(UPLOAD_DIR);
     if (is_file($full) && $realFull !== false && $realDir !== false && strpos($realFull, $realDir) === 0) {
@@ -129,20 +164,20 @@ function delete_uploaded_image(?string $path): void
     }
 }
 
-function base_url(): string
+function base_url()
 {
-    if (defined('BASE_URL')) {
-        return rtrim((string) BASE_URL, '/');
+    if (defined('BASE_URL') && BASE_URL !== '') {
+        return rtrim(BASE_URL, '/');
     }
     return '';
 }
 
-function asset(string $path): string
+function asset($path)
 {
     return base_url() . '/' . ltrim($path, '/');
 }
 
-function url(string $path = ''): string
+function url($path = '')
 {
     if ($path === '') {
         return base_url() . '/';

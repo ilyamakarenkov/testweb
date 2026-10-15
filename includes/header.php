@@ -1,20 +1,19 @@
 <?php
-declare(strict_types=1);
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/functions.php';
-require_once __DIR__ . '/auth.php';
+require_once dirname(__FILE__) . '/config.php';
+require_once dirname(__FILE__) . '/db.php';
+require_once dirname(__FILE__) . '/functions.php';
+require_once dirname(__FILE__) . '/auth.php';
 
 // init db (creates schema)
 get_db();
 
-$currentPage = ltrim(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/');
-$navItems = [
-    ['href' => 'index.php', 'label' => 'Новости'],
-    ['href' => 'about.php', 'label' => 'О профсоюзе'],
-    ['href' => 'contacts.php', 'label' => 'Контакты'],
-];
+$currentPage = ltrim(str_replace('\\', '/', isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : ''), '/');
+$navItems = array(
+    array('href' => 'index.php', 'label' => 'Новости'),
+    array('href' => 'about.php', 'label' => 'О профсоюзе'),
+    array('href' => 'contacts.php', 'label' => 'Контакты'),
+);
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -22,7 +21,7 @@ $navItems = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?php echo e(APP_NAME); ?> — новости и информация">
-    <title><?php echo e($pageTitle ?? APP_SHORT); ?> — <?php echo e(APP_SHORT); ?></title>
+    <title><?php echo e(isset($pageTitle) ? $pageTitle : APP_SHORT); ?> — <?php echo e(APP_SHORT); ?></title>
     <link rel="stylesheet" href="<?php echo e(asset('assets/css/style.css')); ?>">
 </head>
 <body>
@@ -55,8 +54,9 @@ $navItems = [
 <div class="container">
 <?php
 // Flash messages
-foreach (['success', 'error', 'info'] as $fk) {
-    if ($m = flash($fk)) {
+foreach (array('success', 'error', 'info') as $fk) {
+    $m = flash($fk);
+    if ($m) {
         echo '<div class="alert alert-' . e($fk) . '">' . e($m) . '</div>';
     }
 }

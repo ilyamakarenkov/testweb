@@ -4,7 +4,7 @@
 Проект на PHP, мобильная адаптивная вёрстка, новостная лента как основа.
 
 ## Требования
-- PHP 8.0+ (расширения: pdo, pdo_sqlite или pdo_mysql, fileinfo, mbstring)
+- PHP 5.3+ (расширения: pdo, pdo_sqlite или pdo_mysql, fileinfo, mbstring)
 - Веб-сервер (Apache/Nginx) или встроенный сервер PHP
 
 ## Установка

@@ -1,19 +1,18 @@
 <?php
-declare(strict_types=1);
 
-require_once __DIR__ . '/../includes/header.php';
+require_once dirname(__FILE__) . '/../includes/header.php';
 
 if (is_logged_in()) {
     redirect(url('admin/index.php'));
 }
 
 $error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf()) {
         $error = 'Неверный токен безопасности. Обновите страницу.';
     } else {
-        $username = trim((string) ($_POST['username'] ?? ''));
-        $password = (string) ($_POST['password'] ?? '');
+        $username = trim((string) (isset($_POST['username']) ? $_POST['username'] : ''));
+        $password = isset($_POST['password']) ? (string) $_POST['password'] : '';
         if (attempt_login($username, $password)) {
             flash('success', 'Вы вошли в систему.');
             redirect(url('admin/index.php'));
@@ -36,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($error): ?>
             <div class="alert alert-error"><?php echo e($error); ?></div>
         <?php endif; ?>
-        <form method="post" action="">
+        <form method="post" action="" enctype="multipart/form-data">
             <?php echo csrf_field(); ?>
             <div class="form-group">
                 <label for="username">Логин</label>
@@ -57,4 +56,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once dirname(__FILE__) . '/../includes/footer.php'; ?>

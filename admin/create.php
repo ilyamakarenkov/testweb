@@ -1,26 +1,25 @@
 <?php
-declare(strict_types=1);
 
-require_once __DIR__ . '/../includes/auth.php';
+require_once dirname(__FILE__) . '/../includes/auth.php';
 require_login();
 
-$errors = [];
-$values = [
+$errors = array();
+$values = array(
     'title' => '',
     'excerpt' => '',
     'content' => '',
     'published_at' => date('Y-m-d\TH:i'),
     'is_published' => '1',
-];
+);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf()) {
         $errors[] = 'Неверный токен безопасности.';
     } else {
-        $values['title'] = trim((string) ($_POST['title'] ?? ''));
-        $values['excerpt'] = trim((string) ($_POST['excerpt'] ?? ''));
-        $values['content'] = trim((string) ($_POST['content'] ?? ''));
-        $values['published_at'] = trim((string) ($_POST['published_at'] ?? ''));
+        $values['title'] = trim((string) (isset($_POST['title']) ? $_POST['title'] : ''));
+        $values['excerpt'] = trim((string) (isset($_POST['excerpt']) ? $_POST['excerpt'] : ''));
+        $values['content'] = trim((string) (isset($_POST['content']) ? $_POST['content'] : ''));
+        $values['published_at'] = trim((string) (isset($_POST['published_at']) ? $_POST['published_at'] : ''));
         $values['is_published'] = isset($_POST['is_published']) ? '1' : '0';
 
         if ($values['title'] === '') {
@@ -31,10 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $imagePath = null;
-        if (empty($errors) && !empty($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+        if (empty($errors) && isset($_FILES['image']) && (isset($_FILES['image']['error']) ? $_FILES['image']['error'] : UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
             try {
                 $imagePath = upload_image($_FILES['image']);
-            } catch (Throwable $e) {
+            } catch (Exception $e) {
                 $errors[] = $e->getMessage();
             }
         }
@@ -43,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo = get_db();
             $stmt = $pdo->prepare("INSERT INTO news (title, slug, excerpt, content, image, is_published, published_at)
                 VALUES (:title, :slug, :excerpt, :content, :image, :pub, :date)");
-            $stmt->execute([
+            $stmt->execute(array(
                 ':title' => $values['title'],
                 ':slug' => slugify($values['title']),
                 ':excerpt' => $values['excerpt'] !== '' ? $values['excerpt'] : null,
@@ -51,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':image' => $imagePath,
                 ':pub' => (int) $values['is_published'],
                 ':date' => $values['published_at'] !== '' ? str_replace('T', ' ', $values['published_at']) : date('Y-m-d H:i:s'),
-            ]);
+            ));
             flash('success', 'Новость создана.');
             redirect(url('admin/index.php'));
         }
@@ -59,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Добавить новость';
-require_once __DIR__ . '/../includes/header.php';
+require_once dirname(__FILE__) . '/../includes/header.php';
 ?>
 
 <section class="hero">
@@ -108,4 +107,4 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once dirname(__FILE__) . '/../includes/footer.php'; ?>

@@ -1,9 +1,7 @@
 <?php
-declare(strict_types=1);
 
 /**
  * Базовая конфигурация сайта.
- * При необходимости переключите DB_DRIVER на 'mysql' и заполните параметры подключения.
  */
 define('APP_NAME', 'Первичная профсоюзная организация ОАО «ЕВРАЗ НТМК» ГМПР');
 define('APP_SHORT', 'Профком НТМК');
@@ -22,13 +20,13 @@ define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
 // SQLite
-define('DB_SQLITE_PATH', __DIR__ . '/../storage/database.sqlite');
+define('DB_SQLITE_PATH', dirname(__FILE__) . '/../storage/database.sqlite');
 
 // Загрузки
-define('UPLOAD_DIR', __DIR__ . '/../storage/uploads');
+define('UPLOAD_DIR', dirname(__FILE__) . '/../storage/uploads');
 define('UPLOAD_URL', 'storage/uploads');
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024);
-define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+define('ALLOWED_IMAGE_TYPES', array('image/jpeg', 'image/png', 'image/gif', 'image/webp'));
 
 // Админ по умолчанию (создаётся при первом запуске)
 define('ADMIN_DEFAULT_USER', 'admin');
@@ -41,6 +39,6 @@ define('NEWS_PER_PAGE', 6);
 date_default_timezone_set('Asia/Yekaterinburg');
 
 // Сессия
-if (session_status() === PHP_SESSION_NONE) {
+if (session_id() == '') {
     session_start();
 }

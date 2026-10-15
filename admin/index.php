@@ -1,11 +1,10 @@
 <?php
-declare(strict_types=1);
 
-require_once __DIR__ . '/../includes/auth.php';
+require_once dirname(__FILE__) . '/../includes/auth.php';
 require_login();
 
 $pageTitle = 'Админка — новости';
-require_once __DIR__ . '/../includes/header.php';
+require_once dirname(__FILE__) . '/../includes/header.php';
 
 $pdo = get_db();
 $stmt = $pdo->query("SELECT * FROM news ORDER BY COALESCE(published_at, created_at) DESC, id DESC");
@@ -50,8 +49,8 @@ $news = $stmt->fetchAll();
                             <tr>
                                 <td><?php echo (int) $n['id']; ?></td>
                                 <td><?php echo e($n['title']); ?></td>
-                                <td><?php echo e(format_date($n['published_at'] ?: $n['created_at'])); ?></td>
-                                <td><?php echo $n['is_published'] ? 'Опубликована' : 'Черновик'; ?></td>
+                                <td><?php echo e(format_date((isset($n['published_at']) && $n['published_at']) ? $n['published_at'] : $n['created_at'])); ?></td>
+                                <td><?php echo !empty($n['is_published']) ? 'Опубликована' : 'Черновик'; ?></td>
                                 <td class="actions">
                                     <a class="btn btn-sm btn-ghost" href="<?php echo e(url('news.php?id=' . (int)$n['id'])); ?>">Просмотр</a>
                                     <a class="btn btn-sm btn-primary" href="<?php echo e(url('admin/edit.php?id=' . (int)$n['id'])); ?>">Изменить</a>
@@ -70,4 +69,4 @@ $news = $stmt->fetchAll();
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once dirname(__FILE__) . '/../includes/footer.php'; ?>

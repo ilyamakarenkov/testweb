@@ -1,12 +1,11 @@
 <?php
-declare(strict_types=1);
 
-require_once __DIR__ . '/config.php';
+require_once dirname(__FILE__) . '/config.php';
 if (!function_exists('slugify')) {
-    require_once __DIR__ . '/functions.php';
+    require_once dirname(__FILE__) . '/functions.php';
 }
 
-function get_db(): PDO
+function get_db()
 {
     static $pdo = null;
     if ($pdo instanceof PDO) {
@@ -16,20 +15,20 @@ function get_db(): PDO
     try {
         if (DB_DRIVER === 'mysql') {
             $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
-            $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+            $pdo = new PDO($dsn, DB_USER, DB_PASS, array(
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
+            ));
         } else {
             $dir = dirname(DB_SQLITE_PATH);
             if (!is_dir($dir)) {
                 mkdir($dir, 0775, true);
             }
-            $pdo = new PDO('sqlite:' . DB_SQLITE_PATH, null, null, [
+            $pdo = new PDO('sqlite:' . DB_SQLITE_PATH, null, null, array(
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
+            ));
             $pdo->exec('PRAGMA foreign_keys = ON');
         }
     } catch (PDOException $e) {
@@ -46,7 +45,7 @@ function get_db(): PDO
     return $pdo;
 }
 
-function init_schema(PDO $pdo): void
+function init_schema($pdo)
 {
     $isMysql = (DB_DRIVER === 'mysql');
 
@@ -95,46 +94,48 @@ function init_schema(PDO $pdo): void
     // Админ по умолчанию
     $stmt = $pdo->query('SELECT COUNT(*) AS c FROM users');
     $row = $stmt->fetch();
-    if ((int) ($row['c'] ?? 0) === 0) {
-        $hash = password_hash(ADMIN_DEFAULT_PASS, PASSWORD_DEFAULT);
+    $count = isset($row['c']) ? (int) $row['c'] : 0;
+    if ($count === 0) {
+        $hash = make_password_hash(ADMIN_DEFAULT_PASS);
         $ins = $pdo->prepare('INSERT INTO users (username, password_hash) VALUES (:u, :h)');
-        $ins->execute([':u' => ADMIN_DEFAULT_USER, ':h' => $hash]);
+        $ins->execute(array(':u' => ADMIN_DEFAULT_USER, ':h' => $hash));
     }
 
     // Демонстрационные новости при первом запуске
     $stmt = $pdo->query('SELECT COUNT(*) AS c FROM news');
     $row = $stmt->fetch();
-    if ((int) ($row['c'] ?? 0) === 0) {
-        $samples = [
-            [
+    $count = isset($row['c']) ? (int) $row['c'] : 0;
+    if ($count === 0) {
+        $samples = array(
+            array(
                 'title' => 'Профсоюзный вторник: охрана труда, подготовка к зиме и показатели по выполнению плана',
                 'excerpt' => 'На еженедельном семинаре-совещании с председателями профкомов структурных подразделений комбината рассмотрели статистику по охране труда, выполнение мероприятий по работе в осенне-зимний период и данные об исполнении плана в сентябре.',
                 'content' => "На еженедельном семинаре-совещании с председателями профкомов структурных подразделений комбината рассмотрели статистику по охране труда, выполнение мероприятий по работе в осенне-зимний период и данные об исполнении плана в сентябре.\n\nЗа прошедшую неделю травм на комбинате не допущено. С начала года зарегистрированы 2 тяжелых и 24 легких несчастных случая, а также 126 микротравм.\n\nОтдельно рассмотрели ход подготовки к осенне-зимнему периоду. В план включено 234 мероприятия, из них выполнено 111.\n\nРабота над Соглашением по охране труда на 2027 год завершена.",
                 'published_at' => date('Y-m-d H:i:s', strtotime('-1 day')),
-            ],
-            [
+            ),
+            array(
                 'title' => 'Здоровье и командный дух: на комбинате отметили лучших физоргов и победителей спартакиады',
                 'excerpt' => 'Во Дворце культуры металлургов состоялось торжественное подведение итогов 67-й Спартакиады ЕВРАЗа. Событие объединило порядка 200 человек.',
                 'content' => "Во Дворце культуры металлургов состоялось торжественное подведение итогов 67-й Спартакиады ЕВРАЗа. Событие объединило порядка 200 человек — руководителей, профсоюзных активистов, физоргов и спортивный актив предприятия.\n\nУчастники получили награды и дипломы. Спартакиада стала ярким завершением спортивного сезона.",
                 'published_at' => date('Y-m-d H:i:s', strtotime('-3 days')),
-            ],
-            [
+            ),
+            array(
                 'title' => 'Ветеран профсоюзного движения получила заслуженное признание',
                 'excerpt' => 'В конвертерном цехе НТМК состоялось награждение Нуризы Шакировой медалью Свердловского обкома ГМПР «Почетный ветеран».',
                 'content' => "В конвертерном цехе Нижнетагильского металлургического комбината состоялось награждение Нуризы Шакировой медалью Свердловского обкома Горно-металлургического профсоюза России «Почетный ветеран Свердловской областной организации ГМПР».\n\nВысокую оценку ее труда и общественной работы дали за многолетнюю преданность делу, весомый вклад в развитие профсоюзного движения и последовательную защиту интересов работников.",
                 'published_at' => date('Y-m-d H:i:s', strtotime('-5 days')),
-            ],
-        ];
+            ),
+        );
         $ins = $pdo->prepare("INSERT INTO news (title, slug, excerpt, content, image, is_published, published_at)
             VALUES (:title, :slug, :excerpt, :content, NULL, 1, :date)");
         foreach ($samples as $s) {
-            $ins->execute([
+            $ins->execute(array(
                 ':title' => $s['title'],
                 ':slug' => slugify($s['title']),
                 ':excerpt' => $s['excerpt'],
                 ':content' => $s['content'],
                 ':date' => $s['published_at'],
-            ]);
+            ));
         }
     }
 }
