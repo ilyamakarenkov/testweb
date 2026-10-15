@@ -184,6 +184,30 @@ function normalize_image_mime($mime)
     return isset($map[$mime]) ? $map[$mime] : $mime;
 }
 
+/**
+ * Список разрешённых MIME-типов изображений.
+ * Не зависит от конфигурации: базовые форматы зашиты здесь, значение из
+ * ALLOWED_IMAGE_TYPES добавляется, если оно задано корректно. Это защищает
+ * от сбоев, когда конфиг на хостинге устарел или повреждён.
+ */
+function allowed_image_types()
+{
+    $defaults = array('image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp');
+    if (defined('ALLOWED_IMAGE_TYPES') && is_array(ALLOWED_IMAGE_TYPES)) {
+        $fromConfig = array();
+        foreach (ALLOWED_IMAGE_TYPES as $t) {
+            $m = normalize_image_mime($t);
+            if ($m !== '') {
+                $fromConfig[] = $m;
+            }
+        }
+        if (!empty($fromConfig)) {
+            return array_values(array_unique(array_merge($defaults, $fromConfig)));
+        }
+    }
+    return $defaults;
+}
+
 function upload_image($file)
 {
     if (empty($file) || (isset($file['error']) && $file['error'] === UPLOAD_ERR_NO_FILE)) {
@@ -215,9 +239,12 @@ function upload_image($file)
         }
     }
 
-    if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
-        $detail = $mime !== '' ? ' (обнаружен: ' . $mime . ')' : ' (тип не распознан)';
-        throw new Exception('Недопустимый тип файла' . $detail . '. Разрешены JPG, PNG, GIF, WebP.');
+    $allowed = allowed_image_types();
+    if ($mime === '' || !in_array($mime, $allowed)) {
+        $detail = $mime !== '' ? 'обнаружен: ' . $mime : 'тип не распознан';
+        throw new Exception(
+            'Недопустимый тип файла (' . $detail . '). Разрешены: ' . implode(', ', $allowed) . '.'
+        );
     }
 
     if (!is_dir(UPLOAD_DIR)) {
