@@ -13,23 +13,33 @@ function get_db(): PDO
         return $pdo;
     }
 
-    if (DB_DRIVER === 'mysql') {
-        $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
-    } else {
-        $dir = dirname(DB_SQLITE_PATH);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
+    try {
+        if (DB_DRIVER === 'mysql') {
+            $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+            $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+        } else {
+            $dir = dirname(DB_SQLITE_PATH);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0775, true);
+            }
+            $pdo = new PDO('sqlite:' . DB_SQLITE_PATH, null, null, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
+            $pdo->exec('PRAGMA foreign_keys = ON');
         }
-        $pdo = new PDO('sqlite:' . DB_SQLITE_PATH, null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        $pdo->exec('PRAGMA foreign_keys = ON');
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Ошибка БД</title></head><body style="font-family:sans-serif;padding:24px;">';
+        echo '<h1>Не удалось подключиться к базе данных</h1>';
+        echo '<p>' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
+        echo '<p>Проверьте, что в PHP включено расширение <code>pdo_sqlite</code> (или <code>pdo_mysql</code> при использовании MySQL) и что каталог <code>storage/</code> доступен для записи.</p>';
+        echo '</body></html>';
+        exit;
     }
 
     init_schema($pdo);
