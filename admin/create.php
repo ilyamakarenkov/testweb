@@ -51,6 +51,15 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                 ':pub' => (int) $values['is_published'],
                 ':date' => $values['published_at'] !== '' ? str_replace('T', ' ', $values['published_at']) : date('Y-m-d H:i:s'),
             ));
+            $newId = (int) $pdo->lastInsertId();
+            // Фотогалерея
+            if (isset($_FILES['gallery']) && is_array($_FILES['gallery']['error'])) {
+                try {
+                    save_gallery_uploads($newId, $_FILES['gallery']);
+                } catch (Exception $e) {
+                    flash('error', 'Галерея: ' . $e->getMessage());
+                }
+            }
             flash('success', 'Новость создана.');
             redirect(url('admin/index.php'));
         }
@@ -89,8 +98,13 @@ require_once dirname(__FILE__) . '/../includes/header.php';
                 <small style="color:var(--muted);">Пустая строка разделяет абзацы.</small>
             </div>
             <div class="form-group">
-                <label for="image">Изображение</label>
+                <label for="image">Обложка</label>
                 <input class="form-control" type="file" id="image" name="image" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="gallery">Фотогалерея (несколько файлов)</label>
+                <input class="form-control" type="file" id="gallery" name="gallery[]" accept="image/*" multiple>
+                <small style="color:var(--muted);">Можно выбрать сразу несколько изображений — они появятся под текстом новости.</small>
             </div>
             <div class="form-group">
                 <label for="published_at">Дата публикации</label>

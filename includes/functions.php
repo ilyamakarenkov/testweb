@@ -326,3 +326,116 @@ function url($path = '')
     }
     return base_url() . '/' . ltrim($path, '/');
 }
+
+/**
+ * Получить контент статической страницы (about / contacts) из БД.
+ */
+function get_page_content($key)
+{
+    $pdo = get_db();
+    $stmt = $pdo->prepare('SELECT * FROM pages WHERE page_key = :k');
+    $stmt->execute(array(':k' => $key));
+    $row = $stmt->fetch();
+    if (!$row) {
+        return null;
+    }
+    return $row;
+}
+
+/**
+ * Все редактируемые страницы (для админки).
+ */
+function get_editable_pages()
+{
+    $pdo = get_db();
+    $stmt = $pdo->query('SELECT * FROM pages ORDER BY id');
+    $rows = $stmt->fetchAll();
+    $out = array();
+    foreach ($rows as $r) {
+        // Служебные ключи (например, маркеры сидов) скрываем
+        if (strpos($r['page_key'], '__') === 0) {
+            continue;
+        }
+        $out[] = $r;
+    }
+    return $out;
+}
+
+/**
+ * Фотогалерея новости.
+ */
+function get_news_gallery($newsId)
+{
+    $pdo = get_db();
+    $stmt = $pdo->prepare('SELECT * FROM news_gallery WHERE news_id = :id ORDER BY sort_order ASC, id ASC');
+    $stmt->execute(array(':id' => (int) $newsId));
+    return $stmt->fetchAll();
+}
+
+/**
+ * Сохранение массива загруженных изображений в галерею новости.
+ * Возвращает количество сохранённых; бросает Exception при ошибке.
+ */
+function save_gallery_uploads($newsId, $files)
+{
+    if (empty($files) || !isset($files['error']) || !is_array($files['error'])) {
+        return 0;
+    }
+    $saved = 0;
+    $pdo = get_db();
+    $ins = $pdo->prepare('INSERT INTO news_gallery (news_id, image, sort_order) VALUES (:n, :i, :s)');
+    $count = count($files['error']);
+    for ($i = 0; $i < $count; $i++) {
+        if ($files['error'][$i] === UPLOAD_ERR_NO_FILE) {
+            continue;
+        }
+        $one = array(
+            'name' => isset($files['name'][$i]) ? $files['name'][$i] : '',
+            'type' => isset($files['type'][$i]) ? $files['type'][$i] : '',
+            'tmp_name' => isset($files['tmp_name'][$i]) ? $files['tmp_name'][$i] : '',
+            'error' => $files['error'][$i],
+            'size' => isset($files['size'][$i]) ? $files['size'][$i] : 0,
+        );
+        $path = upload_image($one);
+        if ($path !== null) {
+            $ins->execute(array(':n' => (int) $newsId, ':i' => $path, ':s' => $i));
+            $saved++;
+        }
+    }
+    return $saved;
+}
+
+/**
+ * Удалить элемент галереи (проверяет принадлежность новости).
+ */
+function delete_gallery_item($galleryId, $newsId)
+{
+    $pdo = get_db();
+    $stmt = $pdo->prepare('SELECT * FROM news_gallery WHERE id = :id AND news_id = :n');
+    $stmt->execute(array(':id' => (int) $galleryId, ':n' => (int) $newsId));
+    $row = $stmt->fetch();
+    if (!$row) {
+        return false;
+    }
+    delete_uploaded_image($row['image']);
+    $del = $pdo->prepare('DELETE FROM news_gallery WHERE id = :id');
+    $del->execute(array(':id' => (int) $galleryId));
+    return true;
+}
+
+/**
+ * Удалить все изображения галереи новости.
+ */
+function delete_news_gallery($newsId)
+{
+    $items = get_news_gallery($newsId);
+    if (empty($items)) {
+        return;
+    }
+    $pdo = get_db();
+    $del = $pdo->prepare('DELETE FROM news_gallery WHERE news_id = :n');
+    $del->execute(array(':n' => (int) $newsId));
+    foreach ($items as $it) {
+        delete_uploaded_image($it['image']);
+    }
+}

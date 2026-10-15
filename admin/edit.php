@@ -71,6 +71,22 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                 ':date' => $values['published_at'] !== '' ? str_replace('T', ' ', $values['published_at']) : date('Y-m-d H:i:s'),
                 ':id' => $id,
             ));
+
+            // Удаление отмеченных фото галереи
+            if (isset($_POST['del_gallery']) && is_array($_POST['del_gallery'])) {
+                foreach ($_POST['del_gallery'] as $gid) {
+                    delete_gallery_item((int) $gid, $id);
+                }
+            }
+            // Дозагрузка новых фото галереи
+            if (isset($_FILES['gallery']) && is_array($_FILES['gallery']['error'])) {
+                try {
+                    save_gallery_uploads($id, $_FILES['gallery']);
+                } catch (Exception $e) {
+                    flash('error', 'Галерея: ' . $e->getMessage());
+                }
+            }
+
             flash('success', 'Новость обновлена.');
             redirect(url('admin/index.php'));
         }
@@ -117,6 +133,26 @@ require_once dirname(__FILE__) . '/../includes/header.php';
             <div class="form-group">
                 <label for="image">Новое изображение</label>
                 <input class="form-control" type="file" id="image" name="image" accept="image/*">
+            </div>
+            <?php $galleryItems = get_news_gallery($id); ?>
+            <div class="form-group">
+                <label>Фотогалерея</label>
+                <?php if (!empty($galleryItems)): ?>
+                    <div class="gallery-admin-grid">
+                        <?php foreach ($galleryItems as $g): ?>
+                            <div class="gallery-admin-item">
+                                <img src="<?php echo e(asset($g['image'])); ?>" alt="">
+                                <label title="Удалить фото">
+                                    <input type="checkbox" name="del_gallery[]" value="<?php echo (int) $g['id']; ?>"> удалить
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <p style="color:var(--muted);font-size:.9rem;margin:4px 0 8px;">Фото в галерее пока нет.</p>
+                <?php endif; ?>
+                <input class="form-control" type="file" name="gallery[]" accept="image/*" multiple style="margin-top:8px;">
+                <small style="color:var(--muted);">Добавить фото: можно выбрать несколько файлов. Отметьте галочкой фото, которые нужно удалить, и сохраните.</small>
             </div>
             <div class="form-group">
                 <label for="published_at">Дата публикации</label>

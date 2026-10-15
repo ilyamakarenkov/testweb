@@ -51,6 +51,22 @@ $next = $nextStmt->fetch();
         }
         ?>
     </div>
+
+    <?php
+    $gallery = get_news_gallery($news['id']);
+    if (!empty($gallery)):
+    ?>
+        <section class="gallery">
+            <h2 class="gallery-title">Фотогалерея</h2>
+            <div class="gallery-grid">
+                <?php foreach ($gallery as $g): ?>
+                    <a class="gallery-item" href="<?php echo e(asset($g['image'])); ?>" target="_blank" rel="noopener">
+                        <img src="<?php echo e(asset($g['image'])); ?>" alt="Фото к новости" loading="lazy">
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
 </article>
 
 <div style="max-width:860px;margin:18px auto 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">

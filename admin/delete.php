@@ -20,6 +20,7 @@ $stmt->execute(array(':id' => $id));
 $row = $stmt->fetch();
 if ($row) {
     delete_uploaded_image(isset($row['image']) ? $row['image'] : null);
+    delete_news_gallery($id);
     $del = $pdo->prepare("DELETE FROM news WHERE id = :id");
     $del->execute(array(':id' => $id));
     flash('success', 'Новость удалена.');

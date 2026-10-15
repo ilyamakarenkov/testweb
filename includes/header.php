@@ -14,6 +14,10 @@ $navItems = array(
     array('href' => 'about.php', 'label' => 'О профсоюзе'),
     array('href' => 'contacts.php', 'label' => 'Контакты'),
 );
+// Пункт «Админка» — только для авторизованных
+if (is_logged_in()) {
+    $navItems[] = array('href' => 'admin/index.php', 'label' => 'Админка');
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -37,16 +41,15 @@ $navItems = array(
         <button class="menu-toggle" type="button" onclick="document.querySelector('.nav').classList.toggle('open')" aria-label="Меню">☰</button>
         <nav class="nav">
             <?php foreach ($navItems as $item): ?>
+                <?php
+                $isActive = ($currentPage === $item['href'])
+                    || ($item['href'] === 'admin/index.php' && strpos($currentPage, 'admin') === 0);
+                ?>
                 <a href="<?php echo e(url($item['href'])); ?>"
-                   class="<?php echo $currentPage === $item['href'] ? 'active' : ''; ?>">
+                   class="<?php echo $isActive ? 'active' : ''; ?>">
                     <?php echo e($item['label']); ?>
                 </a>
             <?php endforeach; ?>
-            <?php if (is_logged_in()): ?>
-                <a href="<?php echo e(url('admin/index.php')); ?>" class="<?php echo (strpos($currentPage, 'admin') === 0) ? 'active' : ''; ?>">Админка</a>
-            <?php else: ?>
-                <a href="<?php echo e(url('admin/login.php')); ?>">Вход</a>
-            <?php endif; ?>
         </nav>
     </div>
 </header>
