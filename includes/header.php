@@ -28,7 +28,7 @@ $navItems = array(
 <header class="site-header">
     <div class="container header-inner">
         <a class="brand" href="<?php echo e(url('index.php')); ?>">
-            <span class="brand-logo">П</span>
+            <img class="brand-logo" src="<?php echo e(asset('images/logo.png')); ?>" alt="" width="44" height="44">
             <span>
                 <?php echo e(APP_SHORT); ?>
                 <small><?php echo e(APP_TAGLINE); ?></small>

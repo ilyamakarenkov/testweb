@@ -51,7 +51,25 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
             </div>
         </form>
         <p style="margin-top:14px;color:var(--muted);font-size:.85rem;">
-            По умолчанию: логин <strong>admin</strong>, пароль <strong>admin123</strong>. Смените пароль после первого входа.
+            <?php
+            // Показываем подсказку, только пока пароль не был изменён
+            $showHint = false;
+            try {
+                $pdo = get_db();
+                $st = $pdo->prepare('SELECT password_hash FROM users WHERE username = :u');
+                $st->execute(array(':u' => ADMIN_DEFAULT_USER));
+                $row = $st->fetch();
+                if ($row && verify_password(ADMIN_DEFAULT_PASS, $row['password_hash'])) {
+                    $showHint = true;
+                }
+            } catch (Exception $ex) {
+                $showHint = false;
+            }
+            if ($showHint):
+            ?>
+                По умолчанию: логин <strong><?php echo e(ADMIN_DEFAULT_USER); ?></strong>, пароль <strong><?php echo e(ADMIN_DEFAULT_PASS); ?></strong>.
+                <strong>Смените пароль сразу после входа</strong> (раздел «Смена пароля» в админке).
+            <?php endif; ?>
         </p>
     </div>
 </div>

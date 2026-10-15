@@ -21,10 +21,10 @@ $stmt->execute();
 $news = $stmt->fetchAll();
 ?>
 
-<section class="hero">
+<section class="hero" style="background-image:linear-gradient(rgba(11,32,54,.78),rgba(11,32,54,.82)),url('<?php echo e(asset('images/hero.jpg')); ?>');">
     <div class="container">
         <h1>Новости профсоюза</h1>
-        <p>Актуальные события, мероприятия и решения первичной профсоюзной организации ОАО «ЕВРАЗ НТМК».</p>
+        <p>Актуальные события, мероприятия и решения первичной профсоюзной организации ОАО «ЕВРАЗ НТМК» — Горно-металлургического профсоюза России.</p>
     </div>
 </section>
 
@@ -77,5 +77,19 @@ $news = $stmt->fetchAll();
         <?php endif; ?>
     <?php endif; ?>
 </div>
+
+<section class="about-teaser">
+    <div class="about-teaser-img">
+        <img src="<?php echo e(asset('images/about.jpg')); ?>" alt="Заседание профсоюза" loading="lazy">
+    </div>
+    <div class="about-teaser-text">
+        <h2>О профсоюзе</h2>
+        <p>Первичная профсоюзная организация ОАО «ЕВРАЗ НТМК» — одна из крупнейших в Горно-металлургическом профсоюзе России. Мы защищаем трудовые права работников, помогаем в решении бытовых и социальных вопросов, проводим спартакиады, оздоровительные программы и работу профсоюзных комиссий.</p>
+        <div class="about-teaser-actions">
+            <a class="btn btn-primary" href="<?php echo e(url('about.php')); ?>">Подробнее о профсоюзе</a>
+            <a class="btn btn-ghost" href="<?php echo e(url('contacts.php')); ?>">Контакты и приёмная</a>
+        </div>
+    </div>
+</section>
 
 <?php require_once dirname(__FILE__) . '/includes/footer.php'; ?>

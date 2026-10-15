@@ -1,11 +1,10 @@
 <?php
-declare(strict_types=1);
 
 $pageTitle = 'Контакты';
-require_once __DIR__ . '/includes/header.php';
+require_once dirname(__FILE__) . '/includes/header.php';
 ?>
 
-<section class="hero">
+<section class="hero" style="background-image:linear-gradient(rgba(11,32,54,.78),rgba(11,32,54,.84)),url('<?php echo e(asset('images/hero.jpg')); ?>');">
     <div class="container">
         <h1>Контакты</h1>
         <p>Первичная профсоюзная организация ОАО «ЕВРАЗ НТМК» ГМПР</p>

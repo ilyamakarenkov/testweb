@@ -1,11 +1,10 @@
 <?php
-declare(strict_types=1);
 
 $pageTitle = 'О профсоюзе';
-require_once __DIR__ . '/includes/header.php';
+require_once dirname(__FILE__) . '/includes/header.php';
 ?>
 
-<section class="hero">
+<section class="hero" style="background-image:linear-gradient(rgba(11,32,54,.78),rgba(11,32,54,.84)),url('<?php echo e(asset('images/about.jpg')); ?>');">
     <div class="container">
         <h1>О профсоюзе</h1>
         <p>Первичная профсоюзная организация ОАО «ЕВРАЗ НТМК» ГМПР</p>

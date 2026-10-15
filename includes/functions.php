@@ -128,9 +128,28 @@ function upload_image($file)
     if (!isset($file['size']) || $file['size'] > MAX_UPLOAD_SIZE) {
         throw new Exception('Файл слишком большой (макс. 5 МБ).');
     }
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime = $finfo->file($file['tmp_name']);
-    if (!in_array($mime, ALLOWED_IMAGE_TYPES)) {
+    $mime = '';
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = (string) $finfo->file($file['tmp_name']);
+    }
+    // Запасная проверка: getimagesize надёжнее на старых хостингах
+    if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
+        $info = @getimagesize($file['tmp_name']);
+        if ($info !== false && isset($info['mime'])) {
+            $mime = $info['mime'];
+        }
+    }
+    // Последний шанс: по расширению, но только если это действительно изображение
+    if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $extMap = array('jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp');
+        $info = @getimagesize($file['tmp_name']);
+        if ($info !== false && isset($extMap[$ext])) {
+            $mime = $extMap[$ext];
+        }
+    }
+    if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
         throw new Exception('Недопустимый тип файла. Разрешены JPG, PNG, GIF, WebP.');
     }
     if (!is_dir(UPLOAD_DIR)) {

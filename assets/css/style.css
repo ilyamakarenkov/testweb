@@ -64,13 +64,10 @@ a:hover { text-decoration: underline; }
 .brand-logo {
     width: 44px;
     height: 44px;
-    border-radius: 10px;
+    border-radius: 50%;
+    object-fit: cover;
     background: rgba(255,255,255,.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 1.1rem;
+    border: 2px solid rgba(255,255,255,.35);
 }
 .brand small { display: block; font-weight: 400; font-size: .78rem; opacity: .85; }
 
@@ -339,6 +336,29 @@ textarea.form-control { min-height: 160px; resize: vertical; }
     box-shadow: var(--shadow);
 }
 .empty h3 { margin: 0 0 6px; color: var(--text); }
+
+/* About teaser */
+.about-teaser {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 0;
+    margin-top: 40px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+.about-teaser-img img { width: 100%; height: 100%; object-fit: cover; min-height: 260px; display: block; }
+.about-teaser-text { padding: 26px 28px; }
+.about-teaser-text h2 { margin: 0 0 12px; font-size: 1.4rem; color: var(--primary); }
+.about-teaser-text p { color: var(--muted); line-height: 1.65; margin: 0 0 18px; }
+.about-teaser-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 720px) {
+    .about-teaser { grid-template-columns: 1fr; }
+    .about-teaser-img img { min-height: 180px; max-height: 220px; }
+    .about-teaser-text { padding: 20px 18px; }
+}
 
 /* Mobile nav toggle */
 .menu-toggle {

@@ -23,6 +23,7 @@ $news = $stmt->fetchAll();
         <aside class="admin-sidebar">
             <a href="<?php echo e(url('admin/index.php')); ?>" class="active">Все новости</a>
             <a href="<?php echo e(url('admin/create.php')); ?>">+ Добавить новость</a>
+            <a href="<?php echo e(url('admin/password.php')); ?>">Сменить пароль</a>
             <a href="<?php echo e(url('index.php')); ?>">На сайт</a>
             <a href="<?php echo e(url('admin/logout.php')); ?>">Выйти</a>
         </aside>

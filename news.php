@@ -10,7 +10,7 @@ $stmt = $pdo->prepare("SELECT * FROM news WHERE id = :id AND is_published = 1");
 $stmt->execute(array(':id' => $id));
 $news = $stmt->fetch();
 if (!$news) {
-    http_response_code(404);
+    header('HTTP/1.0 404 Not Found');
     $pageTitle = 'Не найдено';
     require_once dirname(__FILE__) . '/includes/header.php';
     echo '<div class="empty"><h3>Новость не найдена</h3><p><a href="' . e(url('index.php')) . '">Вернуться к новостям</a></p></div>';

@@ -32,7 +32,7 @@ function get_db()
             $pdo->exec('PRAGMA foreign_keys = ON');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
+        header('HTTP/1.0 500 Internal Server Error');
         echo '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Ошибка БД</title></head><body style="font-family:sans-serif;padding:24px;">';
         echo '<h1>Не удалось подключиться к базе данных</h1>';
         echo '<p>' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
