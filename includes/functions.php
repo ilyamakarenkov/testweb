@@ -169,7 +169,24 @@ function base_url()
     if (defined('BASE_URL') && BASE_URL !== '') {
         return rtrim(BASE_URL, '/');
     }
-    return '';
+    static $detected = null;
+    if ($detected !== null) {
+        return $detected;
+    }
+    $d = '';
+    if (isset($_SERVER['SCRIPT_NAME'])) {
+        $d = dirname($_SERVER['SCRIPT_NAME']);
+        $d = str_replace('\\', '/', $d);
+        if (basename($d) === 'admin') {
+            $d = dirname($d);
+        }
+        $d = rtrim($d, '/');
+        if ($d === '' || $d === '/' || $d === '.') {
+            $d = '';
+        }
+    }
+    $detected = $d;
+    return $detected;
 }
 
 function asset($path)
