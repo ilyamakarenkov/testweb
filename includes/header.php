@@ -9,7 +9,7 @@ require_once __DIR__ . '/auth.php';
 // init db (creates schema)
 get_db();
 
-$currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
+$currentPage = ltrim(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/');
 $navItems = [
     ['href' => 'index.php', 'label' => 'Новости'],
     ['href' => 'about.php', 'label' => 'О профсоюзе'],
@@ -44,7 +44,7 @@ $navItems = [
                 </a>
             <?php endforeach; ?>
             <?php if (is_logged_in()): ?>
-                <a href="<?php echo e(url('admin/index.php')); ?>" class="<?php echo str_starts_with($currentPage, 'admin') ? 'active' : ''; ?>">Админка</a>
+                <a href="<?php echo e(url('admin/index.php')); ?>" class="<?php echo (strpos($currentPage, 'admin') === 0) ? 'active' : ''; ?>">Админка</a>
             <?php else: ?>
                 <a href="<?php echo e(url('admin/login.php')); ?>">Вход</a>
             <?php endif; ?>

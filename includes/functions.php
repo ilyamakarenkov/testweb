@@ -101,13 +101,13 @@ function upload_image(array $file): ?string
     if (!is_dir(UPLOAD_DIR)) {
         mkdir(UPLOAD_DIR, 0775, true);
     }
-    $ext = match ($mime) {
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/gif' => 'gif',
-        'image/webp' => 'webp',
-        default => 'bin',
-    };
+    $ext = 'bin';
+    switch ($mime) {
+        case 'image/jpeg': $ext = 'jpg'; break;
+        case 'image/png': $ext = 'png'; break;
+        case 'image/gif': $ext = 'gif'; break;
+        case 'image/webp': $ext = 'webp'; break;
+    }
     $name = uniqid('img_', true) . '.' . $ext;
     $dest = UPLOAD_DIR . '/' . $name;
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
@@ -122,7 +122,9 @@ function delete_uploaded_image(?string $path): void
         return;
     }
     $full = __DIR__ . '/../' . ltrim($path, '/');
-    if (is_file($full) && str_starts_with(realpath($full) ?: '', realpath(UPLOAD_DIR) ?: '')) {
+    $realFull = realpath($full);
+    $realDir = realpath(UPLOAD_DIR);
+    if (is_file($full) && $realFull !== false && $realDir !== false && strpos($realFull, $realDir) === 0) {
         @unlink($full);
     }
 }
