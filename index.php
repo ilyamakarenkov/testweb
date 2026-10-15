@@ -63,13 +63,18 @@ $pageTitle = 'Новости';
 require_once dirname(__FILE__) . '/includes/header.php';
 ?>
 
-<div class="feed-list-wrap">
-    <section class="masthead sheet-masthead">
+<section class="masthead">
+    <div class="container">
         <span class="kicker">ГМПР · ЕВРАЗ НТМК</span>
         <h1>Новости профсоюза</h1>
         <p>События, мероприятия и решения первичной профсоюзной организации ОАО «ЕВРАЗ НТМК» — в одном месте.</p>
-    </section>
+    </div>
+</section>
+<figure class="photo-strip">
+    <img src="<?php echo e(asset('images/news.jpg')); ?>" alt="Новости профсоюза">
+</figure>
 
+<div class="feed-list-wrap">
     <div class="feed-list" id="feed-list">
         <?php if (empty($news)): ?>
             <div class="empty">
