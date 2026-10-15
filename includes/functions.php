@@ -123,41 +123,103 @@ function verify_password($password, $hash)
     return crypt($password, $hash) === $hash;
 }
 
+/**
+ * Определение MIME-типа изображения по сигнатуре (первые байты файла).
+ * Работает на любой версии PHP без fileinfo/getimagesize (важно для PHP 5.3,
+ * где getimagesize не поддерживает WebP).
+ */
+function detect_image_mime($path)
+{
+    $head = '';
+    $fh = @fopen($path, 'rb');
+    if ($fh) {
+        $head = (string) @fread($fh, 16);
+        @fclose($fh);
+    }
+    if (strlen($head) >= 4) {
+        if (substr($head, 0, 3) === "\xFF\xD8\xFF") {
+            return 'image/jpeg';
+        }
+        if (substr($head, 0, 8) === "\x89PNG\r\n\x1a\n") {
+            return 'image/png';
+        }
+        if (substr($head, 0, 4) === 'GIF8') {
+            return 'image/gif';
+        }
+        if (strlen($head) >= 12 && substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'WEBP') {
+            return 'image/webp';
+        }
+        if (substr($head, 0, 2) === 'BM') {
+            return 'image/bmp';
+        }
+    }
+    // Сигнатура не распознана — пробуем fileinfo / getimagesize
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $m = (string) $finfo->file($path);
+        if ($m !== '') {
+            return $m;
+        }
+    }
+    $info = @getimagesize($path);
+    if ($info !== false && isset($info['mime'])) {
+        return $info['mime'];
+    }
+    return '';
+}
+
+/**
+ * Приведение разновидностей MIME-типов к каноничным значениям.
+ */
+function normalize_image_mime($mime)
+{
+    $map = array(
+        'image/jpg' => 'image/jpeg',
+        'image/pjpeg' => 'image/jpeg',
+        'image/x-png' => 'image/png',
+        'image/x-ms-bmp' => 'image/bmp',
+        'image/x-bmp' => 'image/bmp',
+    );
+    $mime = strtolower(trim((string) $mime));
+    return isset($map[$mime]) ? $map[$mime] : $mime;
+}
+
 function upload_image($file)
 {
     if (empty($file) || (isset($file['error']) && $file['error'] === UPLOAD_ERR_NO_FILE)) {
         return null;
     }
     if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
-        throw new Exception('Ошибка загрузки файла.');
+        throw new Exception('Ошибка загрузки файла (код ' . (int) $file['error'] . ').');
     }
-    if (!isset($file['size']) || $file['size'] > MAX_UPLOAD_SIZE) {
+    if (!isset($file['size']) || (int) $file['size'] === 0) {
+        throw new Exception('Файл пуст — возможно, ошибка передачи. Попробуйте ещё раз.');
+    }
+    if ((int) $file['size'] > MAX_UPLOAD_SIZE) {
         throw new Exception('Файл слишком большой (макс. 5 МБ).');
     }
-    $mime = '';
-    if (class_exists('finfo')) {
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime = (string) $finfo->file($file['tmp_name']);
-    }
-    // Запасная проверка: getimagesize надёжнее на старых хостингах
-    if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
-        $info = @getimagesize($file['tmp_name']);
-        if ($info !== false && isset($info['mime'])) {
-            $mime = $info['mime'];
-        }
-    }
-    // Последний шанс: по расширению, но только если это действительно изображение
-    if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $extMap = array('jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp');
-        $info = @getimagesize($file['tmp_name']);
-        if ($info !== false && isset($extMap[$ext])) {
+
+    $mime = normalize_image_mime(detect_image_mime($file['tmp_name']));
+
+    // Если содержимое не распознано — доверяем расширению файла
+    // (файл всё равно настоящий: move_uploaded_file проверяет это)
+    if ($mime === '') {
+        $ext = strtolower(pathinfo(isset($file['name']) ? $file['name'] : '', PATHINFO_EXTENSION));
+        $extMap = array(
+            'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'jpe' => 'image/jpeg',
+            'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp',
+            'bmp' => 'image/bmp',
+        );
+        if (isset($extMap[$ext])) {
             $mime = $extMap[$ext];
         }
     }
+
     if (!in_array($mime, ALLOWED_IMAGE_TYPES, true)) {
-        throw new Exception('Недопустимый тип файла. Разрешены JPG, PNG, GIF, WebP.');
+        $detail = $mime !== '' ? ' (обнаружен: ' . $mime . ')' : ' (тип не распознан)';
+        throw new Exception('Недопустимый тип файла' . $detail . '. Разрешены JPG, PNG, GIF, WebP.');
     }
+
     if (!is_dir(UPLOAD_DIR)) {
         mkdir(UPLOAD_DIR, 0775, true);
     }
@@ -167,11 +229,12 @@ function upload_image($file)
         case 'image/png': $ext = 'png'; break;
         case 'image/gif': $ext = 'gif'; break;
         case 'image/webp': $ext = 'webp'; break;
+        case 'image/bmp': $ext = 'bmp'; break;
     }
     $name = uniqid('img_', true) . '.' . $ext;
     $dest = UPLOAD_DIR . '/' . $name;
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
-        throw new Exception('Не удалось сохранить файл.');
+        throw new Exception('Не удалось сохранить файл. Проверьте, что каталог storage/uploads доступен на запись.');
     }
     return UPLOAD_URL . '/' . $name;
 }

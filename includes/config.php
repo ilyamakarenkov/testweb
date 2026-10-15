@@ -26,7 +26,7 @@ define('DB_SQLITE_PATH', dirname(__FILE__) . '/../storage/database.sqlite');
 define('UPLOAD_DIR', dirname(__FILE__) . '/../storage/uploads');
 define('UPLOAD_URL', 'storage/uploads');
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024);
-define('ALLOWED_IMAGE_TYPES', array('image/jpeg', 'image/png', 'image/gif', 'image/webp'));
+define('ALLOWED_IMAGE_TYPES', array('image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'));
 
 // Админ по умолчанию (создаётся при первом запуске)
 define('ADMIN_DEFAULT_USER', 'admin');
