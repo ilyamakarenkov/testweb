@@ -1,5 +1,5 @@
 /* ============================================================
-   Профком НТМК — редакционный дизайн (версия 2)
+   Первичная профсоюзная организация ПАО "Евраз НТМК" — редакционный дизайн (версия 2)
    Тёплый белый фон · крупная типографика · красный акцент
    ============================================================ */
 
@@ -1078,4 +1078,12 @@ textarea.form-control { min-height: 160px; resize: vertical; }
     .article, .prose, .form-card { padding: 20px 18px; }
     .featured-body { padding: 18px 18px 20px; }
     .story-thumb { flex-basis: 72px; width: 72px; height: 54px; }
+}
+/* ---------- Contacts table on mobile ---------- */
+@media (max-width: 720px) {
+    .prose { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+    .prose .admin-table { min-width: 460px; }
+    .prose .admin-table th,
+    .prose .admin-table td { padding: 8px 10px; font-size: .85rem; }
 }

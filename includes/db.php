@@ -198,6 +198,7 @@ EOT;
 </div>
 </div>
 <h2>Руководство ППО</h2>
+<div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
 <table class="admin-table">
 <thead><tr><th>Ф.И.О.</th><th>Должность</th><th>Телефон</th></tr></thead>
 <tbody>
@@ -207,6 +208,7 @@ EOT;
 <tr><td>Проскурнин Тимофей Александрович</td><td>Заместитель председателя ППО</td><td>49-10-30</td></tr>
 </tbody>
 </table>
+</div>
 EOT;
 
     $pages = array(
